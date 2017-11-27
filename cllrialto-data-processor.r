@@ -1,16 +1,16 @@
-#-- script to process the cll 210 data
+#-- script to process the cll rialto data
 rm(list = objects())
 
 #-- to read in xlsx files
 library('gdata')
 
 #-- get list of xlsx files in the cll210 directory
-files <- list.files(path = "./data/cll210", pattern = "xlsx$") 
+files <- list.files(path = "./data/rialto", pattern = "xlsx$") 
 
 #-- function to read in the xlsx file as a dataframe
 readxlsx <- function(filename){
 	#-- make our object name
-	a <- read.xls(paste0("./data/cll210/", filename),
+	a <- read.xls(paste0("./data/rialto/", filename),
 		      na.strings = c("", "NA"),
 		      comment.char = "")
 	#-- assign the dataframe to an object which is filename without xlsx extension
@@ -33,7 +33,7 @@ for(i in 1:length(dims.ls)){
 }
 
 #-- write out the dimensions
-write.table(dims.df, file = "cll210_tabledims.txt", sep = "\t", row.names = F)
+write.table(dims.df, file = "cllrialto_tabledims.txt", sep = "\t", row.names = F)
 
 #-- get the column headings per table, and number of NAs
 field.names <- lapply(dfs, function(x) names(x))
@@ -45,14 +45,12 @@ field.names.df <- as.data.frame(unlist(field.names))
 n.missing.df <- as.data.frame(unlist(n.missing))
 n.rows.df <- as.data.frame(unlist(n.rows))
 
-rownames(field.names.df) <- row.names(n.missing.df)
-
 #-- bind those together
-cll210.summ <- cbind(field.names.df, n.missing.df, n.rows.df)
+rialto.summ <- cbind(field.names.df, n.missing.df, n.rows.df)
 #-- correct column names
-names(cll210.summ) <- c("field.name", "n.missing", "n.rows")
+names(rialto.summ) <- c("field.name", "n.missing", "n.rows")
 #-- write out the table
-write.table(cll210.summ, file = "cll210_data_summary.txt", sep = "\t")
+write.table(rialto.summ, file = "rialto_data_summary.txt", sep = "\t")
 
 #-- read PersonID from each dataframe
 ids <- lapply(dfs, function(x) unique(x$PersonId))
