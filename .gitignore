@@ -1,0 +1,10 @@
+*.xlsx
+*.zip
+*.csv
+*data/*
+*.rds
+*researchdata/*
+*.tsv
+*participant-manifest.txt
+*.history
+*DS_Store

@@ -1,0 +1,9 @@
+CompBy
+PatInitials
+INVName
+REGConsultant
+REGCurrentSite
+REGHospitalSite
+RandCheckedBy
+RandomisedBy
+DTHInfSrc_Other
