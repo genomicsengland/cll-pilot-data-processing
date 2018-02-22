@@ -7,3 +7,5 @@ REGHospitalSite
 RandCheckedBy
 RandomisedBy
 DTHInfSrc_Other
+QL30Initials
+NHSNo

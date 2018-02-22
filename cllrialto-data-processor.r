@@ -1,26 +1,28 @@
 #-- script to process the rialto clinical data and create the cohort
+#-- uses the consent manifest as the determinant of which participants
+#-- make it into the final cohort
+#-- the consent manifest lives at https://my.huddle.net/workspace/38658629/files/#/59413080
+#-- it gets updated and edited using data generated from cllrialto-genome-sample-manifest-processor.r
 
-#-- run the sample and genome manifest process
-source("cllrialto-genome-sample-manifest-processor.r")
+#TODO: remove consent related fields?
 
-#-- clear the slate (we read the manifests in lates)
+#-- setup
 rm(list = objects())
+library(wrangleR)
 
 #-- for reading excel files
 library(gdata)
 
 #-- FUNCTIONS
-#-- get list of xlsx files in the cll210 directory
-files <- list.files(path = "./data/rialto", pattern = "txt$") 
-
-#-- function to read in the xlsx file as a dataframe
+#-- function to read in the file as a dataframe
 readfile <- function(filename){
-	#-- make our object name
 	read.table(paste0("./data/rialto/", filename),
 		      na.strings = c("", "NA"),
 		      comment.char = "",
 		      sep = "|",
-		      header = T)
+		      header = T,
+		      stringsAsFactors = F
+		      )
 }
 
 #-- function to write out files
@@ -46,15 +48,14 @@ linecount <- function(file){
 }
 
 #-- PROCESS CLINICAL DATA FILES
+#-- get list of xlsx files in the rialto directory
+files <- list.files(path = "./data/rialto", pattern = "txt$") 
+
 #-- for each of the files, read them in
 dfs <- lapply(files, function(x) readfile(x))
 
 #-- make tidier names
 names(dfs) <- gsub(".txt", "", basename(files))
-
-#-- write out dfs so that don't have to read it in each time during development
-# saveRDS(dfs, file = "cllrialtodata.rds")
-# dfs <- readRDS("cllrialtodata.rds")
 
 #-- make number of rows and cols for each
 dims.ls <- lapply(dfs, function(x) c(nrow(x), ncol(x)))
@@ -83,15 +84,35 @@ names(cllrialto.summ) <- c("n.missing", "n.rows")
 write.table(cllrialto.summ, file = "rialto_data_summary.txt", sep = "\t")
 
 #-- COHORT SELECTION
-sample.manifest <- readRDS("cll210-rialto-sample-manifest.rds")
-consent.manifest <- read.xls("./data/consentmanifest.xlsx", stringsAsFactors = F)
+#-- read in Excel consent manifest file, then drop the unnecessaries
+consent.manifest <- read.xls("CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
+consent.manifest <- dropnrename(consent.manifest,
+	c("Trial.Name..name.might.reappear.a.few.times."
+	,"BiobankPatientID"
+	,"Trial.Number."
+	,"Valid.Consent"
+	,"Outstanding.consent.query"
+	,"Patient.deceased"
+	,"Partial.consent"),
+	c("Trial"
+	,"PatientID"
+	,"TrialNo"
+	,"Valid.consent"
+	,"Outstanding.consent.query"
+	,"Patient.deceased"
+	,"Partial.consent")
+	)
+
+#-- read in the genome manifest file
+#-- assembled from https://my.huddle.net/workspace/29344763/files/#/folder/43829733/list
+#-- processed by cllrialto-genome-sample-manifest-processor.r
 genome.manifest <- readRDS("cll-genomes-manifest.rds")
 
-#-- select only Rialto consent records
-TrialNo.consented <- consent.manifest$Trial.Number.[consent.manifest$Trial.Name. == "Rialto"]
+#-- only interested in the Rialto participants at this point
+consent.manifest <- consent.manifest[consent.manifest$Trial == "Rialto",]
 
-#-- ids to include, select PersonIds for those people whose trial no is in the sample manifest, and they have a genome in the sample.manifest
-#-- problem is that no single table has all PersonIds present in the dataset, and laso has PatientNo (which is needed to make the TrialNo).
+#-- PersonID is the key to select rows from each of the tables
+#-- problem is that no single table has all PersonIds present in the dataset and also has PatientNo (which is needed to make the TrialNo).
 #-- so need to make a meta list of all PersonId:PatientNo:HospitalSite combinations
 #-- get vector for presence of PatientNo
 got.patient.id <- unlist(lapply(dfs, function(x) "PatientNo" %in% colnames(x)))
@@ -106,29 +127,46 @@ participant.manifest <- do.call(rbind, participant.manifest)
 #-- need complete.cases for it to be useful, and only unique rows
 participant.manifest <- unique(participant.manifest[complete.cases(participant.manifest),])
 
+
+#-- need to convert date of birth to year of birth
+#-- two fields are relevant:
+#-- dbo_R_RIALtO_frmQOL_eortc.QL30Birthdate
+#-- dbo_R_RIALtO_Registration1.REGDOB
+#-- function to make year from a date
+to.year.fun <- function(x){
+	as.numeric(format(as.Date(x), "%Y"))
+}
+
+#-- apply it to the fields
+dfs[["dbo_R_RIALtO_Registration1"]]$REGYOB <- to.year.fun(dfs[["dbo_R_RIALtO_Registration1"]]$REGDOB)
+dfs[["dbo_R_RIALtO_frmQOL_eortc"]]$QL30Birthyear <- to.year.fun(dfs[["dbo_R_RIALtO_frmQOL_eortc"]]$QL30Birthdate)
+
+#-- remove the original fields
+dfs[["dbo_R_RIALtO_Registration1"]] <- dfs[["dbo_R_RIALtO_Registration1"]][,
+					!colnames(dfs[["dbo_R_RIALtO_Registration1"]]) %in% "REGDOB"]
+dfs[["dbo_R_RIALtO_frmQOL_eortc"]] <- dfs[["dbo_R_RIALtO_frmQOL_eortc"]][,
+					!colnames(dfs[["dbo_R_RIALtO_frmQOL_eortc"]]) %in% "QL30Birthdate"]
+
 #-- make the trial numbers
 participant.manifest$TrialNo <- paste0(sprintf("%03d", participant.manifest$HospitalSite),
 			   "-",
 			   sprintf("%04d", participant.manifest$PatientNo))
 
-#-- bring in PatientID from sample.manifest
+#-- merge in the details from consent manifest
 participant.manifest <- merge(participant.manifest,
-			      unique(sample.manifest[,c("PatientID", "TrialNo")]),
+			      consent.manifest,
 			      by = "TrialNo",
 			      all.x = T)
 
 #-- flag those who have a genome
 participant.manifest$in.genome.manifest <- participant.manifest$PatientID %in% genome.manifest$PatientID
 
-#-- flag those in the consent manifest
-participant.manifest$in.consent.manifest <- participant.manifest$TrialNo %in% consent.manifest$Trial.Number.
-
-#-- flag those that have 100KGP consent according to registration1 table
-personids.genomes.proj.consent <- dfs[["dbo_R_RIALtO_Registration1"]]$PersonId[which(dfs[["dbo_R_RIALtO_Registration1"]]$REGgenomecons == 1)]
-participant.manifest$genomes.proj.consent <- participant.manifest$PersonId %in% personids.genomes.proj.consent
-
 #-- select participants to take forward
-participant.manifest$export.to.research  <- participant.manifest$in.genome.manifest & participant.manifest$in.consent.manifest & participant.manifest$genomes.proj.consent
+#-- have a genome AND (got valid consent OR are deceased) AND don't have an outstanding consent query AND have a PersonID
+participant.manifest$export.to.research  <- participant.manifest$in.genome.manifest &
+				( participant.manifest$Valid.consent | participant.manifest$Patient.deceased ) &
+				!participant.manifest$Outstanding.consent.query &
+				!is.na(participant.manifest$PersonId)
 
 #-- write out the participant manifest
 write.table(participant.manifest, "rialto-participant-manifest.txt", row.names = F, sep = "\t")
@@ -141,24 +179,39 @@ cols.to.remove <- readLines("rialto-drop-fields.txt")
 #-- check that all columns actually feature in the datasets
 stopifnot(all(cols.to.remove %in% unlist(field.names)))
 
-#-- make new list of datamframes that only have those participants we want to include, and don't have cols to remove
+#-- merge in trialNo to each table, using PersonId as the thing to merge on
+dfs <- lapply(dfs, function(x)
+	      merge(x, participant.manifest[,c("TrialNo", "PersonId")], by = "PersonId", all.x = T))
+
+
+#-- make new list of dataframes that only have those participants we want to include, and don't have cols to remove
 dfs.export <- lapply(dfs, function(x) x[x$PersonId %in% ids.to.include , !names(x) %in% cols.to.remove])
 
+#-- add in genomes table using genome.manifest
+#-- filter for valid PatientID
+dfs.export[["genomes"]] <- genome.manifest[genome.manifest$PatientID %in% participant.manifest$PatientID[which(participant.manifest$export.to.research)],]
+#-- merge in relevant columns from participant.manifest
+dfs.export[["genomes"]] <- merge(dfs.export[["genomes"]],
+				 participant.manifest[,c("TrialNo", "PersonId", "PatientNo", "HospitalSite", "PatientID"),],
+				 by = "PatientID",
+				 all.x = T)
+
 #-- write out to rd file
-# saveRDS(dfs.export, "rialto-research-data.rds")
+saveRDS(dfs.export, "rialto-research-data.rds")
 
 #-- make list of dimenstions to check that have written correctly
 dims.export.ls <- lapply(dfs.export, function(x) c(nrow(x), ncol(x)))
 dims.export.df <- as.data.frame(do.call(rbind, dims.export.ls))
 names(dims.export.df) <- c("nrows", "ncols")
 
-
 #-- write out each of dfs in dfs.export
 lapply(seq_along(dfs.export), function(i) writefile(dfs.export[[i]], paste0("./researchdata/rialto/", names(dfs.export)[i])))
 
 #-- CHECKS
+#-- get list of exported files
 exportedfiles <- list.files("./researchdata/rialto", full.names = T)
 
+#-- get line and column counts of each exported file
 exported.dims.ls <- lapply(exportedfiles, function(x) c(linecount(x) - 1, colcount(x)))
 exported.dims.df <- as.data.frame(do.call(rbind, exported.dims.ls)) 
 row.names(exported.dims.df) <- gsub(".csv", "", basename(exportedfiles))
