@@ -42,6 +42,8 @@ Dina has been through all the consents manually and generated a manifest of comp
 
 2. In order to ensure that the new set of data includes all data that was previously released to the Research Environment I created an extra biobank manifest called `ExtraRialtoSamples.xlsx` which contains four individuals that were in the Rialto data currently available in the Research Environment, in the clinical data, in the genome manifests, but were not in the biobank manifests, likely because we received the last files from Liverpool several months before processing.
 
+3. The platekeys in LP2000295-T1-comp.csv are not correctly formatted, the well coordinates are lacking the leading zero (i.e. `LP2000295-DNA_A1` should be `LP2000295-DNA_A01`) so do not match the upload report. They were manually changed in the source csv file.
+
 # PID fields
 
 After looking through the data fields, the following fields were removed from the clinical data prior to release to the research environment:

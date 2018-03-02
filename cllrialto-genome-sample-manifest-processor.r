@@ -1,6 +1,8 @@
 #-- script to process the genome manifest files found at https://my.huddle.net/workspace/29344763/files/#/folder/43829733/list and the sample manifests received from Liverpool
 rm(list = objects())
 library(gdata)
+library(RCurl)
+library(wrangleR)
 
 #-- GENOME MANIFESTS
 #-- get list of files
@@ -31,6 +33,25 @@ cll.genomes.df$PatientID[!grepl("^([A-Z]{1})([0-9]{5})([A-Z])_(.+)", cll.genomes
 
 #-- remove anything that isn't relevant
 cll.genomes.df <- cll.genomes.df[!is.na(cll.genomes.df$PatientID),]
+
+#-- read in the upload report
+seqrep <- getURL('https://upload-reports.gel.zone/upload_report.latest.txt')
+sequencing_report <- read.table(textConnection(seqrep),
+				     stringsAsFactors = F,
+				     sep = "\t",
+				     col.names = c("No", "Type", "Platekey", "DeliveryID", "Delivery Date", "Path", "BAM Date", "BAM Size", "Status", "Delivery Version"),
+				     comment.char = "#"
+				     )
+
+#-- remove some columns from sequencing report that are not needed
+sequencing_report <- sequencing_report[,!colnames(sequencing_report) %in% c("No", "Type")]
+
+#-- merge the upload report into the genomes manifest by Platekey
+cll.genomes.df <- merge(cll.genomes.df, sequencing_report, by.x = "Sample.Well", by.y = "Platekey", all.x = T)
+
+#-- make a build column that says whether genome is b37 or b38, reinstate NAs afterwards
+cll.genomes.df$Build <- ifelse(cll.genomes.df$Delivery.Version %in% c("V1", "V2", "V3"), "b37", "b38")
+cll.genomes.df$Build[is.na(cll.genomes.df$Delivery.Version)] <- NA
 
 #-- write that out
 saveRDS(cll.genomes.df, file = "cll-genomes-manifest.rds")

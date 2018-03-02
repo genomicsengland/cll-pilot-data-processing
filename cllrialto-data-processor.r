@@ -31,7 +31,8 @@ writefile <- function(df, filename, separator = "|"){
 		    sep = separator,
 		    paste0(filename, ".csv"),
 		    row.names = F,
-		    quote = F)
+		    quote = F,
+		    na= "")
 }
 
 #-- function to get how many columns (separators) in file?
