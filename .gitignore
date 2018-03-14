@@ -8,3 +8,5 @@
 *participant-manifest.txt
 *.history
 *DS_Store
+*rialto_data_summary.txt
+*rialto_tabledims.txt

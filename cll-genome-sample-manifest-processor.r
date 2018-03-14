@@ -77,13 +77,9 @@ filenames <- gsub(".xlsx", "", basename(files))
 dfs <- lapply(files, function(x) readxlsx(x))
 names(dfs) <- filenames
 
-#-- only interested in Rialto and CLL210 for the moment, and only TiralNo and Patient ID, so just extract that
-cll210.rialto <- rbind(dfs[["CLL210Samples"]][c("PatientID", "TrialNo", "origin")],
-		       dfs[["RialtoSamples"]][c("PatientID", "TrialNo", "origin")],
-		       dfs[["ExtraRialtoSamples"]][c("PatientID", "TrialNo", "origin")])
-
-#-- need to look at this, there is one PatientID that has (CLL210) after it so remove that
-cll210.rialto$PatientID <- gsub(" (CLL210)", "", cll210.rialto$PatientID, fixed = T)
+#-- rbind down each of the dataframes, only including PatientID, TrialNo, and origin.
+biobank_manifest <- do.call(rbind, lapply(dfs, subset, select=c("PatientID", "TrialNo", "origin")))
+biobank_manifest$PatientID <- gsub(" (CLL210)", "", biobank_manifest$PatientID, fixed = T)
 
 #-- write that file out
-saveRDS(cll210.rialto, file = "cll210-rialto-sample-manifest.rds")
+saveRDS(biobank_manifest, file = "cll-sample-manifest.rds")
