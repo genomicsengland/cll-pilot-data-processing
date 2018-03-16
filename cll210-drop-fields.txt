@@ -1,0 +1,9 @@
+CompBy
+INVName
+REGConsultant
+REGHospitalSite
+REGPatInitials
+RandCheckedBy
+RandomisedBy
+DTHInfSrc_Other
+DTHCauseOthr
