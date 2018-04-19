@@ -15,7 +15,7 @@ library(gdata)
 #-- FUNCTIONS
 #-- function to read in the file as a dataframe
 readfile <- function(filename){
-	read.table(paste0("./data/admire/", filename),
+	read.table(paste0("../received-clinical-datasets/admire/", filename),
 		      na.strings = c("", "NA"),
 		      comment.char = "",
 		      sep = "|",
@@ -24,10 +24,10 @@ readfile <- function(filename){
 }
 
 #-- function to write out files
-writefile <- function(df, filename, separator = "|"){
+writefile <- function(df, filename, separator = "\t"){
 	write.table(df,
 		    sep = separator,
-		    paste0(filename, ".csv"),
+		    paste0(filename, ".txt"),
 		    row.names = F,
 		    quote = F,
 		    na= "")
@@ -48,7 +48,7 @@ linecount <- function(file){
 
 #-- PROCESS CLINICAL DATA FILES
 #-- get list of txt files in the cll210 directory
-files <- list.files(path = "./data/admire", pattern = "txt$") 
+files <- list.files(path = "../received-clinical-datasets/admire", pattern = "txt$") 
 
 #-- for each of the files, read them in
 dfs <- lapply(files, function(x) readfile(x))
@@ -77,7 +77,7 @@ write.table(cll210.summ, file = "admire_data_summary.txt", sep = "\t")
 
 #-- COHORT SELECTION
 #-- read in Excel consent manifest file, then drop the unnecessaries
-consent.manifest <- read.xls("CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
+consent.manifest <- read.xls("../CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
 consent.manifest <- dropnrename(consent.manifest,
 	c("Trial.Name"
 	,"BiobankPatientID"
@@ -98,13 +98,13 @@ consent.manifest <- dropnrename(consent.manifest,
 #-- read in the genome manifest file
 #-- assembled from https://my.huddle.net/workspace/29344763/files/#/folder/43829733/list
 #-- processed by cllrialto-genome-sample-manifest-processor.r
-genome.manifest <- readRDS("cll-genomes-manifest.rds")
+genome.manifest <- readRDS("../cll-genomes-manifest.rds")
 
 #-- only interested in the CLL210 participants at this point
 consent.manifest <- consent.manifest[consent.manifest$Trial == "Admire",]
 
 #-- read in the file that links TrialNo to PatNo, provided by Fabrizio
-participant.manifest <- read.table("./data/admire/trialnos.csv", sep = "|", header = T)
+participant.manifest <- read.table("../received-clinical-datasets/admire/trialnos.csv", sep = "|", header = T)
 
 #-- need to convert date of birth to year of birth
 #-- two fields are relevant:
@@ -174,11 +174,11 @@ dims.export.df <- as.data.frame(do.call(rbind, dims.export.ls))
 names(dims.export.df) <- c("nrows", "ncols")
 
 #-- write out each of dfs in dfs.export
-lapply(seq_along(dfs.export), function(i) writefile(dfs.export[[i]], paste0("./researchdata/admire/", names(dfs.export)[i])))
+lapply(seq_along(dfs.export), function(i) writefile(dfs.export[[i]], paste0("../research-datasets/admire/", names(dfs.export)[i])))
 
 #-- CHECKS
 #-- get list of exported files
-exportedfiles <- list.files("./researchdata/admire", full.names = T)
+exportedfiles <- list.files("../research-datasets/admire", full.names = T)
 
 #-- get line and column counts of each exported file
 exported.dims.ls <- lapply(exportedfiles, function(x) c(linecount(x) - 1, colcount(x)))

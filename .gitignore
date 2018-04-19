@@ -1,8 +1,8 @@
 *
 !.gitignore
 !README.md
-!rialto/cll-rialto-to-bertha-converter.r
-!rialto/cllrialto-data-processor.r
+!rialto/rialto-to-bertha-converter.r
+!rialto/rialto-data-processor.r
 !cll-genome-sample-manifest-processor.r
 !rialto/rialto-drop-fields.txt
 !cll210/cll210-data-processor.r

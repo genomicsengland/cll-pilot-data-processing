@@ -3,9 +3,6 @@
 #-- make it into the final cohort
 #-- the consent manifest lives at https://my.huddle.net/workspace/38658629/files/#/59413080
 
-#-- TODO: check that all platekeys in the old cll210 are in my genome.manifest
-#-- TODO: download new consent manifest
-
 #-- setup
 rm(list = objects())
 library(wrangleR)
@@ -16,7 +13,7 @@ library(gdata)
 #-- FUNCTIONS
 #-- function to read in the file as a dataframe
 readfile <- function(filename){
-	read.table(paste0("./data/cll210/", filename),
+	read.table(paste0("../received-clinical-datasets/cll210/", filename),
 		      na.strings = c("", "NA"),
 		      comment.char = "",
 		      sep = "|",
@@ -26,10 +23,10 @@ readfile <- function(filename){
 }
 
 #-- function to write out files
-writefile <- function(df, filename, separator = "|"){
+writefile <- function(df, filename, separator = "\t"){
 	write.table(df,
 		    sep = separator,
-		    paste0(filename, ".csv"),
+		    paste0(filename, ".txt"),
 		    row.names = F,
 		    quote = F,
 		    na= "")
@@ -37,7 +34,7 @@ writefile <- function(df, filename, separator = "|"){
 
 #-- function to get how many columns (separators) in file?
 #-- essentially get awk to count number of separators per line (deleting nulls first), then do sort and uniq
-colcount <- function(file, separator = "|"){
+colcount <- function(file, separator = "\t"){
 	numcols <- as.numeric(strsplit(system(paste0("cat ", file, " | tr -d '\\000' | awk -F'", separator, "' '{print NF}' | sort | uniq"), intern = T), " "))
 	stopifnot(length(numcols) == 1)
 	return(numcols)
@@ -50,7 +47,7 @@ linecount <- function(file){
 
 #-- PROCESS CLINICAL DATA FILES
 #-- get list of txt files in the cll210 directory
-files <- list.files(path = "./data/cll210", pattern = "txt$") 
+files <- list.files(path = "../received-clinical-datasets/cll210", pattern = "txt$") 
 
 #-- for each of the files, read them in
 dfs <- lapply(files, function(x) readfile(x))
@@ -79,7 +76,7 @@ write.table(cll210.summ, file = "cll210_data_summary.txt", sep = "\t")
 
 #-- COHORT SELECTION
 #-- read in Excel consent manifest file, then drop the unnecessaries
-consent.manifest <- read.xls("CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
+consent.manifest <- read.xls("../CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
 consent.manifest <- dropnrename(consent.manifest,
 	c("Trial.Name"
 	,"BiobankPatientID"
@@ -100,7 +97,7 @@ consent.manifest <- dropnrename(consent.manifest,
 #-- read in the genome manifest file
 #-- assembled from https://my.huddle.net/workspace/29344763/files/#/folder/43829733/list
 #-- processed by cllrialto-genome-sample-manifest-processor.r
-genome.manifest <- readRDS("cll-genomes-manifest.rds")
+genome.manifest <- readRDS("../cll-genomes-manifest.rds")
 
 #-- only interested in the CLL210 participants at this point
 consent.manifest <- consent.manifest[consent.manifest$Trial == "CLL210",]
@@ -181,12 +178,12 @@ cols.to.remove <- readLines("cll210-drop-fields.txt")
 #-- check that all columns actually feature in the datasets
 stopifnot(all(cols.to.remove %in% unlist(field.names)))
 
-#-- merge in trialNo to each table, except those tables that have already got it
+#-- merge in trialNo to each table
+#-- the tables that already have it don't have complete data so need to remove TrialNo column then re-merge
 for(i in names(dfs)){
-	      if(!got.patient.no[i]){
-		     dfs[[i]] <- merge(dfs[[i]], participant.manifest[,c("TrialNo", "PersonId")], by = "PersonId", all.x = T)
-	      }
-	      }
+	dfs[[i]] <- dfs[[i]][,!colnames(dfs[[i]]) %in% "TrialNo"]
+	dfs[[i]] <- merge(dfs[[i]], participant.manifest[,c("TrialNo", "PersonId")], by = "PersonId", all.x = T)
+}
 
 #-- make new list of dataframes that only have those participants we want to include, and don't have cols to remove
 dfs.export <- lapply(dfs, function(x) x[x$PersonId %in% ids.to.include , !names(x) %in% cols.to.remove])
@@ -209,16 +206,16 @@ dims.export.df <- as.data.frame(do.call(rbind, dims.export.ls))
 names(dims.export.df) <- c("nrows", "ncols")
 
 #-- write out each of dfs in dfs.export
-lapply(seq_along(dfs.export), function(i) writefile(dfs.export[[i]], paste0("./researchdata/cll210/", names(dfs.export)[i])))
+lapply(seq_along(dfs.export), function(i) writefile(dfs.export[[i]], paste0("../research-datasets/cll210/", names(dfs.export)[i])))
 
 #-- CHECKS
 #-- get list of exported files
-exportedfiles <- list.files("./researchdata/cll210", full.names = T)
+exportedfiles <- list.files("../research-datasets/cll210", full.names = T)
 
 #-- get line and column counts of each exported file
 exported.dims.ls <- lapply(exportedfiles, function(x) c(linecount(x) - 1, colcount(x)))
 exported.dims.df <- as.data.frame(do.call(rbind, exported.dims.ls)) 
-row.names(exported.dims.df) <- gsub(".csv", "", basename(exportedfiles))
+row.names(exported.dims.df) <- gsub(".txt", "", basename(exportedfiles))
 
 #-- are there any differences
 dims.export.df[order(rownames(dims.export.df)),] == exported.dims.df[order(rownames(exported.dims.df)),]
