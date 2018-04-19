@@ -27,12 +27,12 @@ dfs.slim <- lapply(dfs, function(x) x[,colnames(x) %in% c("Sample.ID", "Sample.W
 cll.genomes.df <- as.data.frame(do.call(rbind, dfs.slim))
 cll.genomes.df <- cll.genomes.df[!is.na(cll.genomes.df),]
 
-#-- make PatientID from the Sample.ID
-cll.genomes.df$PatientID <- gsub("^([A-Z]{1})([0-9]{5})([A-Z])_(.+)", "\\1\\2\\3", cll.genomes.df$Sample.ID)
-cll.genomes.df$PatientID[!grepl("^([A-Z]{1})([0-9]{5})([A-Z])_(.+)", cll.genomes.df$Sample.ID)] <- NA
+#-- make PatientID from the Sample.ID, Sample.IDs are a bit of a mess, think the best way to do this is to just remove the _GL and _T1
+cll.genomes.df$PatientID <- cll.genomes.df$Sample.ID
+cll.genomes.df$PatientID <- gsub("_GL$|_T1$|_T2$|_CLL$|_T1_REPEAT1$", "", cll.genomes.df$PatientID)
 
-#-- remove anything that isn't relevant
-cll.genomes.df <- cll.genomes.df[!is.na(cll.genomes.df$PatientID),]
+#-- remove empty rows
+cll.genomes.df <- cll.genomes.df[!is.na(cll.genomes.df$Sample.Well),]
 
 #-- read in the upload report
 seqrep <- getURL('https://upload-reports.gel.zone/upload_report.latest.txt')

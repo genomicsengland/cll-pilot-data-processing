@@ -18,6 +18,10 @@ There are various identifiers used in the CLL datasets:
 
 * `Sample.Well` - is the standard platekey that identifies the plate and well that was used during sequencing e.g. `LP1234567-DNA_A01`.
 
+## Admire and Arctic
+
+Fabrizio has sent file spreadsheet that links trial number (in Admire and Arctic is in 000/00000 format where first digits are hospital site and second set are PatNo). Change / in trialNo to - to match other trials. Use this file to link consent manifest to patient clinical data. Convert this into another text file, trialnos.csv, becomes the starting point for the participant manifest.
+
 # Data files
 
 We get clinical data in a number of Excel spreadsheets for the CLL trials. There is also a Schema within each archive. The Schema doesn't match (in terms of tables) 100% with what we receive, some tables are named differently and we don't seem to receive all the tables cited in the Schema. However in terms of column names these seem to match what we get.
@@ -46,7 +50,7 @@ Dina has been through all the consents manually and generated a manifest of comp
 
 # PID fields
 
-After looking through the data fields, the following fields were removed from the clinical data prior to release to the research environment:
+After looking through the data fields, the following fields were removed from the Rialto clinical data prior to release to the research environment:
 
 * `CompBy` - the full name of the person completing the data;
 	 
@@ -73,6 +77,10 @@ After looking through the data fields, the following fields were removed from th
 Some of these fields are present across multiple tables, all instances of the field names are removed.
 
 There are numerous comments fields throughout the data that have not been removed.
+
+## CLL210
+
+The only addition to these columns in CLL210 (not all of the above are present in the CLL210 data however) is `DTHCauseOthr`.
 
 # Consent check / Cohort selection
 
