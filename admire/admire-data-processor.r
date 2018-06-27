@@ -111,7 +111,7 @@ participant.manifest <- read.table("../received-clinical-datasets/admire/trialno
 #-- dbo_R_RIALtO_frmQOL_eortc.QL30Birthdate
 #-- dbo_R_RIALtO_Registration1.REGDOB
 #-- function to make year from a date
-to.year.fun <- function(x){
+to.year.fun <- function(x){\
 	as.numeric(format(as.Date(x), "%Y"))
 }
 

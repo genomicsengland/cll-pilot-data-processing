@@ -6,7 +6,7 @@ library(wrangleR)
 
 #-- GENOME MANIFESTS
 #-- get list of files
-files <- list.files(path = "./data/manifests", pattern = ".csv$", full.names = T)
+files <- list.files(path = "received-clinical-datasets/manifests", pattern = ".csv$", full.names = T)
 filenames <- gsub(".csv", "", basename(files))
 
 #-- function to reead in the manifest files
