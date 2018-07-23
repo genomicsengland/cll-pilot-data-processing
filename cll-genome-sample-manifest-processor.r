@@ -17,7 +17,7 @@ readmanifest <- function(file){
 #-- read in the files
 dfs <- lapply(files, function(x) readmanifest(x))
 
-#-- make that last file have equivalent column names as others
+#-- make weird first file have equivalent column names as others
 colnames(dfs[[1]]) <- c("Sample.ID", "Sample.Well", "Unknown4", "Volume..ul.", "Unknown1", "Unknown2", "Unknown3")
 
 #-- make new list that contains only the columns of interest (Sample.ID and Sample.Well)
@@ -35,19 +35,13 @@ cll.genomes.df$PatientID <- gsub("_GL$|_T1$|_T2$|_CLL$|_T1_REPEAT1$", "", cll.ge
 cll.genomes.df <- cll.genomes.df[!is.na(cll.genomes.df$Sample.Well),]
 
 #-- read in the upload report
-seqrep <- getURL('https://upload-reports.gel.zone/upload_report.latest.txt')
-sequencing_report <- read.table(textConnection(seqrep),
-				     stringsAsFactors = F,
-				     sep = "\t",
-				     col.names = c("No", "Type", "Platekey", "DeliveryID", "Delivery Date", "Path", "BAM Date", "BAM Size", "Status", "Delivery Version"),
-				     comment.char = "#"
-				     )
+seqrep <- getur()
 
 #-- remove some columns from sequencing report that are not needed
-sequencing_report <- sequencing_report[,!colnames(sequencing_report) %in% c("No", "Type")]
+seqrep <- seqrep[,!colnames(seqrep) %in% c("No", "Type")]
 
 #-- merge the upload report into the genomes manifest by Platekey
-cll.genomes.df <- merge(cll.genomes.df, sequencing_report, by.x = "Sample.Well", by.y = "Platekey", all.x = T)
+cll.genomes.df <- merge(cll.genomes.df, seqrep, by.x = "Sample.Well", by.y = "Platekey", all.x = T)
 
 #-- make a build column that says whether genome is b37 or b38, reinstate NAs afterwards
 cll.genomes.df$Build <- ifelse(cll.genomes.df$Delivery.Version %in% c("V1", "V2", "V3"), "b37", "b38")
@@ -70,7 +64,7 @@ readxlsx <- function(filename){
 }
 
 #-- get list of biobank manifests
-files <- list.files(path = "./data/biobankmanifests", pattern = ".xlsx$", full.names = T)
+files <- list.files(path = "received-clinical-datasets/biobankmanifests", pattern = ".xlsx$", full.names = T)
 filenames <- gsub(".xlsx", "", basename(files))
 
 #-- read the files in
@@ -80,6 +74,9 @@ names(dfs) <- filenames
 #-- rbind down each of the dataframes, only including PatientID, TrialNo, and origin.
 biobank_manifest <- do.call(rbind, lapply(dfs, subset, select=c("PatientID", "TrialNo", "origin")))
 biobank_manifest$PatientID <- gsub(" (CLL210)", "", biobank_manifest$PatientID, fixed = T)
+
+#-- got a lot of trial numbers with / instead of - separating the two numbers. Easier if everything in the same format so change it
+biobank_manifest$TrialNo <- gsub("/", "-", biobank_manifest$TrialNo)
 
 #-- write that file out
 saveRDS(biobank_manifest, file = "cll-sample-manifest.rds")

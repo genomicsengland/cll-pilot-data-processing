@@ -21,14 +21,16 @@ writefile <- function(df, filename, separator = "\t"){
 #-- read in Excel consent manifest file, then drop the unnecessaries
 consent.manifest <- read.xls("../CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
 consent.manifest <- dropnrename(consent.manifest,
-	c("Trial.Name"
+	c("Row.ID"
+	  ,"Trial.Name"
 	,"BiobankPatientID"
 	,"Trial.Number."
 	,"Valid.Consent"
 	,"Outstanding.consent.query"
 	,"Patient.deceased"
 	,"Partial.consent"),
-	c("Trial"
+	c( "consent.id"
+	,"Trial"
 	,"PatientID"
 	,"TrialNo"
 	,"Valid.consent"
@@ -50,17 +52,14 @@ consent.manifest$in.genome.manifest <- consent.manifest$PatientID %in% genome.ma
 
 #-- select participants to take forward
 #-- got a genome AND (got valid consent OR are deceased) AND don't have an outstanding consent query AND have a PatientID
-consent.manifest$export.to.research  <- consent.manifest$in.genome.manifest &
-				( consent.manifest$Valid.consent | consent.manifest$Patient.deceased ) &
-				!consent.manifest$Outstanding.consent.query &
-				!is.na(consent.manifest$PatientID)
+consent.manifest$export.to.research  <- ( consent.manifest$Valid.consent | consent.manifest$Patient.deceased ) & !consent.manifest$Outstanding.consent.query 
 
 #-- merge in the genomes table
 genomes.table <- merge(consent.manifest, genome.manifest, by = "PatientID", all.x = T)
 #-- sort out column order to match other genomes tables
 colorder <- c("PatientID", "Sample.Well", "Sample.ID", "DeliveryID", "Delivery.Date", "Path", "BAM.Date", "BAM.Size", "Status", "Delivery.Version", "Build", "TrialNo")
-genomes.table <- genomes.table[genomes.table$export.to.research, colorder]
+genomes.table <- genomes.table[genomes.table$export.to.research & !is.na(genomes.table$Path), colorder]
 
 #-- write out the files
-writefile(genomes.table, "clear-interim-genomes-table.txt")
-writefile(consent.manifest, "clear-interim-participant-manifest.txt")
+writefile(genomes.table, "clear-interim-genomes-table")
+writefile(consent.manifest, "clear-interim-participant-manifest")

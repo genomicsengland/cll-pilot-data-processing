@@ -35,7 +35,7 @@ writefile <- function(df, filename, separator = "\t"){
 
 #-- function to get how many columns (separators) in file?
 #-- essentially get awk to count number of separators per line (deleting nulls first), then do sort and uniq
-colcount <- function(file, separator = "|"){
+colcount <- function(file, separator = "\t"){
 	numcols <- as.numeric(strsplit(system(paste0("cat ", file, " | tr -d '\\000' | awk -F'", separator, "' '{print NF}' | sort | uniq"), intern = T), " "))
 	stopifnot(length(numcols) == 1)
 	return(numcols)
@@ -79,14 +79,16 @@ write.table(cll210.summ, file = "arctic_data_summary.txt", sep = "\t")
 #-- read in Excel consent manifest file, then drop the unnecessaries
 consent.manifest <- read.xls("../CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
 consent.manifest <- dropnrename(consent.manifest,
-	c("Trial.Name"
+				c("Row.ID"
+				  , "Trial.Name"
 	,"BiobankPatientID"
 	,"Trial.Number."
 	,"Valid.Consent"
 	,"Outstanding.consent.query"
 	,"Patient.deceased"
 	,"Partial.consent"),
-	c("Trial"
+				c("consent.id"
+				  , "Trial"
 	,"PatientID"
 	,"TrialNo"
 	,"Valid.consent"
@@ -122,17 +124,14 @@ dfs[["rand"]] <- dfs[["rand"]][,!colnames(dfs[["rand"]]) %in% "DOBF03"]
 participant.manifest <- merge(participant.manifest,
 			      consent.manifest,
 			      by = "TrialNo",
-			      all.x = T)
+			      all = T)
 
 #-- flag those who have a genome
 participant.manifest$in.genome.manifest <- participant.manifest$PatientID %in% genome.manifest$PatientID
 
 #-- select participants to take forward
 #-- have a genome AND (got valid consent OR are deceased) AND don't have an outstanding consent query AND have a PersonID
-participant.manifest$export.to.research  <- participant.manifest$in.genome.manifest &
-				( participant.manifest$Valid.consent | participant.manifest$Patient.deceased ) &
-				!participant.manifest$Outstanding.consent.query &
-				!is.na(participant.manifest$PatNo)
+participant.manifest$export.to.research  <- ( participant.manifest$Valid.consent | participant.manifest$Patient.deceased ) & !participant.manifest$Outstanding.consent.query
 
 #-- write out the participant manifest
 write.table(participant.manifest, "arctic-participant-manifest.txt", row.names = F, sep = "\t")

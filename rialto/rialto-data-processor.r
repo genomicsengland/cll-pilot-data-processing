@@ -21,7 +21,8 @@ readfile <- function(filename){
 		      comment.char = "",
 		      sep = "|",
 		      header = T,
-		      stringsAsFactors = F
+		      stringsAsFactors = F,
+		      quote = "\""
 		      )
 }
 
@@ -88,14 +89,16 @@ write.table(cllrialto.summ, file = "rialto_data_summary.txt", sep = "\t")
 #-- read in Excel consent manifest file, then drop the unnecessaries
 consent.manifest <- read.xls("../CLL consent spreadsheet_MASTER.xlsx", stringsAsFactors = F)
 consent.manifest <- dropnrename(consent.manifest,
-	c("Trial.Name"
+				c("Row.ID"
+				  , "Trial.Name"
 	,"BiobankPatientID"
 	,"Trial.Number."
 	,"Valid.Consent"
 	,"Outstanding.consent.query"
 	,"Patient.deceased"
 	,"Partial.consent"),
-	c("Trial"
+				c("consent.id"
+				  , "Trial"
 	,"PatientID"
 	,"TrialNo"
 	,"Valid.consent"
@@ -157,17 +160,14 @@ participant.manifest$TrialNo <- paste0(sprintf("%03d", participant.manifest$Hosp
 participant.manifest <- merge(participant.manifest,
 			      consent.manifest,
 			      by = "TrialNo",
-			      all.x = T)
+			      all = T)
 
 #-- flag those who have a genome
 participant.manifest$in.genome.manifest <- participant.manifest$PatientID %in% genome.manifest$PatientID
 
 #-- select participants to take forward
 #-- have a genome AND (got valid consent OR are deceased) AND don't have an outstanding consent query AND have a PersonID
-participant.manifest$export.to.research  <- participant.manifest$in.genome.manifest &
-				( participant.manifest$Valid.consent | participant.manifest$Patient.deceased ) &
-				!participant.manifest$Outstanding.consent.query &
-				!is.na(participant.manifest$PersonId)
+participant.manifest$export.to.research  <- ( participant.manifest$Valid.consent | participant.manifest$Patient.deceased ) & !participant.manifest$Outstanding.consent.query 
 
 #-- write out the participant manifest
 write.table(participant.manifest, "rialto-participant-manifest.txt", row.names = F, sep = "\t")
