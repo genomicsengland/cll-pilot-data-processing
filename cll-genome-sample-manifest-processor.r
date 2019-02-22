@@ -16,9 +16,14 @@ readmanifest <- function(file){
 
 #-- read in the files
 dfs <- lapply(files, function(x) readmanifest(x))
+names(dfs) <- gsub(".csv", "", basename(files))
 
 #-- make weird first file have equivalent column names as others
 colnames(dfs[[1]]) <- c("Sample.ID", "Sample.Well", "Unknown4", "Volume..ul.", "Unknown1", "Unknown2", "Unknown3")
+
+#-- sample wells in LP3000* are in wrong format, need to correct
+dfs[["LP3000701-T1.new"]]$Sample.Well <- gsub("_DNA", "-DNA", dfs[["LP3000701-T1.new"]]$Sample.Well)
+dfs[["LP3000702-GL.new"]]$Sample.Well <- gsub("_DNA", "-DNA", dfs[["LP3000702-GL.new"]]$Sample.Well)
 
 #-- make new list that contains only the columns of interest (Sample.ID and Sample.Well)
 dfs.slim <- lapply(dfs, function(x) x[,colnames(x) %in% c("Sample.ID", "Sample.Well")])
