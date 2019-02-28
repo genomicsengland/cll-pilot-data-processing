@@ -19,3 +19,4 @@
 !rialto/rialto-data-processor.r
 !rialto/rialto-drop-fields.txt
 !rialto/rialto-to-bertha-converter.r
+!*.sql
