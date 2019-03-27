@@ -1,21 +1,25 @@
-#-- script to process the admire clinical data and create the cohort
-#-- uses the consent manifest as the determinant of which participants
-#-- make it into the final cohort
-#-- the consent manifest lives at https://my.huddle.net/workspace/38658629/files/#/59413080
-
+#-- script to refresh the admire dataset given new data tables
 #-- setup
 rm(list = objects())
 options(stringsAsFactors = F,
 	scipen = 200)
 library(wrangleR)
-
-#-- for reading excel files
-library(gdata)
+library(tidyverse)
+library(lubridate)
+library(digest)
+library(RPostgreSQL)
+drv <- dbDriver("PostgreSQL")
+indx.con <- dbConnect(drv,
+             dbname = "testing",
+             host = "localhost",
+             port = 5432,
+             user = "simon",
+             password = "postgres")
 
 #-- FUNCTIONS
 #-- function to read in the file as a dataframe
 readfile <- function(filename){
-	read.table(paste0("../received-clinical-datasets/admire/", filename),
+	read.table(filename,
 		      na.strings = c("", "NA"),
 		      comment.char = "",
 		      sep = "|",
@@ -33,47 +37,129 @@ writefile <- function(df, filename, separator = "\t"){
 		    na= "")
 }
 
-#-- function to get how many columns (separators) in file?
-#-- essentially get awk to count number of separators per line (deleting nulls first), then do sort and uniq
-colcount <- function(file, separator = "\t"){
-	numcols <- as.numeric(strsplit(system(paste0("cat ", file, " | tr -d '\\000' | awk -F'", separator, "' '{print NF}' | sort | uniq"), intern = T), " "))
-	stopifnot(length(numcols) == 1)
-	return(numcols)
+#-- function to get table from admire db
+gettable <- function(tablename){
+	x <- dbGetQuery(indx.con, paste0("select * from admire.", tablename, ";"))
+	# identify date columns in df
+	is_date_col <- sapply(colnames(x), FUN = function(y) is.Date(x[[y]]) | is.POSIXt(x[[y]]))
+	# convert date cols to characters	
+	for(i in 1:ncol(x)){
+		if(is_date_col[i]){
+			x[,i] <- as.character(x[,i], format = "%Y/%m/%d")
+		}
+	}
+	return(x)
 }
 
-#-- function to get linecount of a file
-linecount <- function(file){
-	as.numeric(strsplit(trimws(system(paste("wc -l", file), intern = T)), " ")[[1]][1])
+#-- function to gather together different versions of the same df and remove duplicate rows
+#-- across dataframes but not within dataframes
+mosaic_dfs <- function(df_ls){
+	require(digest)
+	x <- lapply(df_ls, function(x){
+					# hash each row (will be duplicates if duplicate rows)
+					x$row_hash <- apply(x, 1, digest)
+					# create row_id per duplicate row
+					y <- x %>% group_by(row_hash) %>%
+						mutate(row_id = row_number())
+					return(as.data.frame(y))
+					})
+	#--     apply a source id value, which is the number of the dataframe in the list of dfs
+	x <- lapply(1:length(x), function(y){
+					x[[y]]$source_id <- c(y)
+					return(x[[y]])
+					})
+	# rbind them together and make hash of all columns, excluding row_hash
+	# this gives us unique identifier for each row (and duplicate of the row) that will be the same across
+	# sources. Need to happen after rbind so that formats are the same
+	y <- do.call("rbind", x)
+	y$row_id_hash <- apply(y[,!colnames(y) %in% c("row_hash", "source_id")], 1, digest)
+	# sort them by source_id desc and remove any duplicate rows (based on duplicates in row_id_hash)
+	y <- y[order(y$source_id, decreasing = T),]
+	return(y[!duplicated(y$row_id_hash), !colnames(y) %in% c("row_hash", "row_id", "row_id_hash")])
 }
 
 #-- PROCESS CLINICAL DATA FILES
 #-- get list of txt files in the cll210 directory
-files <- list.files(path = "../received-clinical-datasets/admire", pattern = "txt$") 
+files <- list.files(path = "~/Downloads/admire", pattern = "txt$", full.names = T) 
 
 #-- for each of the files, read them in
 dfs <- lapply(files, function(x) readfile(x))
 
-#-- make tidier names
-names(dfs) <- gsub(".txt", "", basename(files))
+#-- make tidier names and those that match tables on db
+names(dfs) <- gsub(".txt", "", tolower(basename(files)))
+dfs <- lapply(dfs, function(x) setNames(x, tolower(names(x))))
 
-#-- make number of rows and cols for each
-dims.ls <- lapply(dfs, function(x) c(nrow(x), ncol(x)))
-dims.df <- as.data.frame(do.call(rbind, dims.ls))
-names(dims.df) <- c("nrows", "ncols")
+#-- COMPARE PREVIOUS DB TABLES AND COLS TO NEW
+curr_db_tables_cols <- dbGetQuery(indx.con, "select table_name, column_name
+							 from information_schema.columns
+							 where table_schema = 'admire';"
+							 )
 
-#-- write out the dimensions
-write.table(dims.df, file = "admire_tabledims.txt", sep = "\t", row.names = F)
+#-- curr_db_tables_cols$in_previous <- TRUE
+#-- new_tables_cols <- lapply(names(dfs), function(x) data.frame("table_name" = c(x),
+#--                                                              "column_name" = tolower(colnames(dfs[[x]])),
+#--                                                              "in_new" = c(TRUE)))
+#-- new_tables_cols <- do.call("rbind", new_tables_cols)
+#-- tabl_indx <- merge(curr_db_tables_cols, new_tables_cols, by = c("table_name", "column_name"), all = T)
+#-- dtv(tabl_indx[is.na(tabl_indx$in_previous) | is.na(tabl_indx$in_new),])
 
-#-- get the column headings per table, and number of NAs
-field.names <- lapply(dfs, function(x) names(x))
-n.missing <- lapply(dfs, function(x) apply(x, 2, function(y) sum(is.na(y))))
-n.rows <- lapply(dfs, function(x) apply(x, 2, function(y) length(y)))
+#-- CONCATENATE OLD AND NEW DATA PER TABLE AND SPOT DIFFERENT ROWS
+#-- get table names present in both old and new then create list with previous and new for each table
+tables_in_old_and_new <- unique(names(dfs)[names(dfs) %in% curr_db_tables_cols$table_name])
+concat_dfs <- lapply(tables_in_old_and_new, function(x){
+						 out <- list()
+						 out[["old"]] <- gettable(x)
+						 out[["new"]] <- dfs[[x]]
+						 return(out)
+							 })
 
-#-- convert to data.frame then writeout
-n.missing.df <- as.data.frame(unlist(n.missing))
-n.rows.df <- as.data.frame(unlist(n.rows))
-cll210.summ <- setNames(cbind(n.missing.df, n.rows.df), c("n.missing", "n.rows"))
-write.table(cll210.summ, file = "admire_data_summary.txt", sep = "\t")
+test <- lapply(concat_dfs, function(x){
+				   mosaic_dfs(x)
+							 })
+
+names(test) <- tables_in_old_and_new
+
+trialno <- gettable("trialno")
+consent_manifest$export_to_research <- (consent_manifest$valid_consent | 
+					consent_manifest$patient_deceased) &
+					!consent_manifest$outstanding_consent_query
+cohort_trialno <- consent_manifest$trialno[consent_manifest$export_to_research &
+					   !is.na(consent_manifest$trialno)]
+cohort_patno <- trialno$patno[trialno$trialno %in% cohort_trialno]
+
+### BELOW IS TOSS
+#-- got to add in tables that were in old not in new and vice versa
+all_pat_nos_in_new <- unique(unlist(lapply(dfs, function(x) x$patno)))
+olds_patnos <- unique(gettable("trialno")$patno)
+
+all_patnos <- unique(c(all_pat_nos_in_new, olds_patnos))
+comp <- data.frame("patno" = all_patnos,
+				   "in_new" = all_patnos %in% all_pat_nos_in_new,
+				   "in_old" = all_patnos %in% olds_patnos,
+				   "in_cohort" = all_patnos %in% cohort_patno)
+
+indx.con <- dbConnect(drv,
+             dbname = "cohorts",
+             host = "localhost",
+             port = 5441,
+             user = "sthompson",
+             password = "password")
+
+consent_manifest <- dbGetQuery(indx.con, "select * from cll_common.consent_manifest where trial in ('Admire');")
+rand <- dfs[["rand"]]
+
+#-- make summary of what is in waht
+summ <- lapply(concat_dfs, function(x){
+				   data.frame("nrow_old" = nrow(x[["prev"]]),
+				   			  "nrow_new" = nrow(x[["new"]]),
+				   			  "n_pat_in_old_not_new" = sum(!unique(x[["prev"]]$patno) %in% x[["new"]]$patno),
+				   			  "n_pat_in_new_not_old" = sum(!unique(x[["new"]]$patno) %in% x[["prev"]]$patno)
+				   			  )
+							 })
+summ <- do.call("rbind", summ)
+summ$table_name <- names(concat_dfs)
+
+#-- ADD BACK IN TABLES NOT FOUND
 
 #-- COHORT SELECTION
 #-- read in Excel consent manifest file, then drop the unnecessaries
@@ -186,3 +272,6 @@ row.names(exported.dims.df) <- gsub(".csv", "", basename(exportedfiles))
 
 #-- are there any differences
 dims.export.df[order(rownames(dims.export.df)),] == exported.dims.df[order(rownames(exported.dims.df)),]
+
+
+dbdisconnectall()
