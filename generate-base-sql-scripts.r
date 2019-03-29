@@ -14,8 +14,8 @@ con <- dbConnect(drv,
              user = p$user,
              password = p$password)
 
-SCHEMA = "admire_v2"
-TGT_DIR = "~/Documents/Projects/cll-pilot-data-processing/admire/sql-scripts"
+SCHEMA = "<blurgh>"
+TGT_DIR = "~/Documents/Projects/cll-pilot-data-processing/<blurgh>/sql-scripts"
 
 #-- get list of tables and columns in the schema
 d <- dbGetQuery(con, paste0("select table_name, column_name from information_schema.columns where table_schema = '", SCHEMA, "';"))
