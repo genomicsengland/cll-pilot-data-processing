@@ -10,4 +10,4 @@ select patno,
     triald,
     trialnamed,
     trialnameothd 
-from arctic_v2.othtxdeath;
+from arctic_v4.othtxdeath;

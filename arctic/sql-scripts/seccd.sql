@@ -2,4 +2,4 @@ select patno,
     seccdiagdated,
     secctyped,
     othtyped 
-from arctic_v2.seccd;
+from arctic_v4.seccd;

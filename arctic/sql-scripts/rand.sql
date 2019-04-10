@@ -5,4 +5,4 @@ select patno,
     sexf03,
     ethnicityf03,
     trialnof03 
-from arctic_v2.rand;
+from arctic_v4.rand;

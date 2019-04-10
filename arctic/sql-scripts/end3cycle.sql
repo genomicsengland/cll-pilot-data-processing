@@ -30,4 +30,4 @@ select patno,
     totprot3c,
     albu3c,
     mrdassessf06 
-from arctic_v2.end3cycle;
+from arctic_v4.end3cycle;

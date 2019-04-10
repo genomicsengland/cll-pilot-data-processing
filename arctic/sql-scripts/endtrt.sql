@@ -33,4 +33,4 @@ select patno,
     dctend,
     retcountdateend,
     retcountend 
-from arctic_v2.endtrt;
+from arctic_v4.endtrt;

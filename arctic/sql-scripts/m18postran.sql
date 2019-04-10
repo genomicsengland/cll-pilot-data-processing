@@ -44,4 +44,4 @@ select patno,
     sign18m,
     mrdpct18m,
     iwcll18m 
-from arctic_v2.m18postran;
+from arctic_v4.m18postran;

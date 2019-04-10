@@ -4,4 +4,4 @@ select patno,
     pprogafu,
     othtxafu,
     seccanafu 
-from arctic_v2.anfup;
+from arctic_v4.anfup;

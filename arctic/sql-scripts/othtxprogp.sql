@@ -10,4 +10,4 @@ select patno,
     trialp,
     trialnamep,
     trialnameothp 
-from arctic_v2.othtxprogp;
+from arctic_v4.othtxprogp;

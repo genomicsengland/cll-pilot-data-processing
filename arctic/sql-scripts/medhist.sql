@@ -81,4 +81,4 @@ select patno,
     sigab,
     siggb,
     sigmb 
-from arctic_v2.medhist;
+from arctic_v4.medhist;

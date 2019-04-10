@@ -1,3 +1,3 @@
 select trialno,
     patno 
-from arctic_v2.trialno;
+from arctic_v4.trialno;

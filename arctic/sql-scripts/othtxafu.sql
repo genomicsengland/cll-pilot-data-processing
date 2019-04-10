@@ -10,4 +10,4 @@ select patno,
     trialafu,
     trialnameafu,
     trialnameothafu 
-from arctic_v2.othtxafu;
+from arctic_v4.othtxafu;

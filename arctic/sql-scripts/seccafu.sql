@@ -2,4 +2,4 @@ select patno,
     seccdiagdateafu,
     secctypeafu,
     othtypeafu 
-from arctic_v2.seccafu;
+from arctic_v4.seccafu;

@@ -6,4 +6,4 @@ select patno,
     deaddisstat,
     othtxdeath,
     seccand 
-from arctic_v2.death;
+from arctic_v4.death;

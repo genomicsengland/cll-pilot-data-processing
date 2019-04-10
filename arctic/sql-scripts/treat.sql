@@ -19,4 +19,4 @@ select patno,
     chemoedate,
     chemoereas,
     chemoereasoth 
-from arctic_v2.treat;
+from arctic_v4.treat;

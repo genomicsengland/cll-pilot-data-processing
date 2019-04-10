@@ -10,4 +10,4 @@ select patno,
     chemorouteoth,
     chemomodreas,
     chemomodreasoth 
-from arctic_v2.dosemod;
+from arctic_v4.dosemod;

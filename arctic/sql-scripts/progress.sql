@@ -3,4 +3,4 @@ select patno,
     txstopp,
     txstopdatep,
     othtxprogp 
-from arctic_v2.progress;
+from arctic_v4.progress;

@@ -49,4 +49,4 @@ select patno,
     sign12m,
     mrdpct12m,
     iwcll12m 
-from arctic_v2.m12postran;
+from arctic_v4.m12postran;

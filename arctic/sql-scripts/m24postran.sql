@@ -50,4 +50,4 @@ select patno,
     mrdpct24m,
     iwcll24m,
     seccanf12 
-from arctic_v2.m24postran;
+from arctic_v4.m24postran;

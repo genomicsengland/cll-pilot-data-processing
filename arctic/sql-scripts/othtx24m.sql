@@ -10,4 +10,4 @@ select patno,
     trial24m,
     trialname24m,
     trialnameoth24m 
-from arctic_v2.othtx24m;
+from arctic_v4.othtx24m;

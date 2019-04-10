@@ -7,4 +7,4 @@ select patno,
     mctrtsdate,
     mctrtstop,
     mctrtedate 
-from arctic_v2.onmedcon;
+from arctic_v4.onmedcon;
