@@ -10,4 +10,4 @@ select patno,
     triald,
     trialnamed,
     trialnameothd 
-from admire_v2.othtxdeath;
+from admire_v4.othtxdeath;

@@ -49,4 +49,4 @@ select patno,
     sign12m,
     mrdpct12m,
     iwcll12m 
-from admire_v2.m12postran;
+from admire_v4.m12postran;

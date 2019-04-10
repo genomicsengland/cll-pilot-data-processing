@@ -7,4 +7,4 @@ select patno,
     othtxedate,
     othtxreas,
     othtxreasoth 
-from admire_v2.othtxdet;
+from admire_v4.othtxdet;

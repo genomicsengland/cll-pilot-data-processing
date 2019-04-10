@@ -5,4 +5,4 @@ select patno,
     sexf03,
     racef03,
     trialnof03 
-from admire_v2.rand;
+from admire_v4.rand;

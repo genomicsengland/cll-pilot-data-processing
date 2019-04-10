@@ -15,6 +15,6 @@ select s.patientid
 from cll_common.sequencing_manifest s 
 left join (select * from cll_common.consent_manifest where trial in ('Admire')) c 
 	on c.patientid=s.patientid 
-left join admire_v2.trialno t 
+left join admire_v4.trialno t 
 	on c.trialno=t.trialno
 ;

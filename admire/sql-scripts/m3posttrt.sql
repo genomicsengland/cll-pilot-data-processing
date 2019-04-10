@@ -43,4 +43,4 @@ select patno,
     signf08p5pb,
     mrdpctf08p5pb,
     compdatef08p5 
-from admire_v2.m3posttrt;
+from admire_v4.m3posttrt;

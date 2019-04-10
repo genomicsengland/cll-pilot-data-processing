@@ -81,4 +81,4 @@ select patno,
     sigab,
     siggb,
     sigmb 
-from admire_v2.medhist;
+from admire_v4.medhist;

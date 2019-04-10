@@ -10,4 +10,4 @@ select patno,
     trialafu,
     trialnameafu,
     trialnameothafu 
-from admire_v2.othtxafu;
+from admire_v4.othtxafu;

@@ -50,4 +50,4 @@ select patno,
     mrdpct24m,
     iwcll24m,
     seccanf12 
-from admire_v2.m24postran;
+from admire_v4.m24postran;

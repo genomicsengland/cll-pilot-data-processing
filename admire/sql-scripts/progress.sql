@@ -3,4 +3,4 @@ select patno,
     txstopp,
     txstopdatep,
     othtxprogp 
-from admire_v2.progress;
+from admire_v4.progress;

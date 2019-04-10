@@ -10,4 +10,4 @@ select patno,
     chemorouteoth,
     chemomodreas,
     chemomodreasoth 
-from admire_v2.dosemod;
+from admire_v4.dosemod;

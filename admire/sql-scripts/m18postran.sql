@@ -44,4 +44,4 @@ select patno,
     sign18m,
     mrdpct18m,
     iwcll18m 
-from admire_v2.m18postran;
+from admire_v4.m18postran;

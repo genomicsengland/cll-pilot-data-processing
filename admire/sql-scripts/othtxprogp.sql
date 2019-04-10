@@ -10,4 +10,4 @@ select patno,
     trialp,
     trialnamep,
     trialnameothp 
-from admire_v2.othtxprogp;
+from admire_v4.othtxprogp;

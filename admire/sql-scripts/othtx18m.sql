@@ -10,4 +10,4 @@ select patno,
     trial18m,
     trialname18m,
     trialnameoth18m 
-from admire_v2.othtx18m;
+from admire_v4.othtx18m;

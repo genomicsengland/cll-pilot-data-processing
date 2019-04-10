@@ -33,4 +33,4 @@ select patno,
     dctend,
     retcountdateend,
     retcountend 
-from admire_v2.endtrt;
+from admire_v4.endtrt;

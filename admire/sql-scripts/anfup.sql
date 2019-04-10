@@ -4,4 +4,4 @@ select patno,
     pprogafu,
     othtxafu,
     seccanafu 
-from admire_v2.anfup;
+from admire_v4.anfup;

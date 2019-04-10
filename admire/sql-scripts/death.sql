@@ -6,4 +6,4 @@ select patno,
     deaddisstat,
     othtxdeath,
     seccand 
-from admire_v2.death;
+from admire_v4.death;

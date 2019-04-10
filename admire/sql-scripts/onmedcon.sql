@@ -7,4 +7,4 @@ select patno,
     mctrtsdate,
     mctrtstop,
     mctrtedate 
-from admire_v2.onmedcon;
+from admire_v4.onmedcon;
