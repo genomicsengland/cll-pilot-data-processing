@@ -1,3 +1,3 @@
 select *
-from flair.f05_rqg_onmedconf05
+from flair_v2.f05_rqg_onmedconf05
 ;

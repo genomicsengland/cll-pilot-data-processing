@@ -1,3 +1,3 @@
 select *
-from flair.medhisf05
+from flair_v2.medhisf05
 ;

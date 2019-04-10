@@ -17,7 +17,7 @@ indx.con <- dbConnect(drv,
              password = "password")
 
 #-- get trialno table, consent manifest, and sequencing manifest
-trialno <- dbGetQuery(indx.con, "select * from flair.trialno;")
+trialno <- dbGetQuery(indx.con, "select * from flair_v2.trialno;")
 consent_manifest <- dbGetQuery(indx.con, "select * from cll_common.consent_manifest where trial in ('CLLFlair', 'CLLFlair/CLLClear');")
 
 #-- get list of sql files which make research tables and read them into memory
