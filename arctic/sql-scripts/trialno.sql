@@ -1,3 +1,4 @@
 select trialno,
-    patno 
-from arctic_v4.trialno;
+    patno,
+    true as v5_addition
+from arctic_v5.trialno;

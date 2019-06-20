@@ -1,13 +1,13 @@
 select patno,
     othtxname12m,
-    othtxnameoth12m,
-    othtxsdate12m,
+    null as othtxnameoth12m,
+    to_date('15/'||othtxsdate12mn, 'DD/MM/YYYY') as othtxsdate12m,
     othtxstop12m,
-    othtxedate12m,
+    to_date('15/'||othtxedate12mn, 'DD/MM/YYYY') as othtxedate12m,
     othtxresp12m,
     othtxreas12m,
-    othtxreasoth12m,
+    null as othtxreasoth12m,
     trial12m,
-    trialname12m,
-    trialnameoth12m 
-from admire_v4.othtx12m;
+    null as trialname12m,
+    null as trialnameoth12m 
+from admire_v5.othtx12m;

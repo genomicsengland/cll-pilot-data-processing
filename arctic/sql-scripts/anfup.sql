@@ -1,7 +1,7 @@
 select patno,
     aliveafu,
-    alivedateafu,
+    to_date('15/'||alivedateafun, 'DD/MM/YYYY') as alivedateafu,
     pprogafu,
     othtxafu,
     seccanafu 
-from arctic_v4.anfup;
+from arctic_v5.anfup;

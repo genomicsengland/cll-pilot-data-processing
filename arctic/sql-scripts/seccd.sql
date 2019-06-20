@@ -1,5 +1,5 @@
 select patno,
-    seccdiagdated,
+    to_date('15/'||seccdiagdatedn, 'DD/MM/YYYY') as seccdiagdated,
     secctyped,
-    othtyped 
-from arctic_v4.seccd;
+    null as othtyped 
+from arctic_v5.seccd;

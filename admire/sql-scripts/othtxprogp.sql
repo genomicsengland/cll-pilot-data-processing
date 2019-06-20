@@ -1,13 +1,13 @@
 select patno,
     othtxnamep,
-    othtxnameothp,
-    othtxsdatep,
+    null as othtxnameothp,
+    to_date('15/'||othtxsdatepn, 'DD/MM/YYYY') as othtxsdatep,
     othtxstopp,
-    othtxedatep,
+    to_date('15/'||othtxedatepn, 'DD/MM/YYYY') as othtxedatep,
     othtxrespp,
     othtxreasp,
-    othtxreasothp,
+    null as othtxreasothp,
     trialp,
-    trialnamep,
-    trialnameothp 
-from admire_v4.othtxprogp;
+    null as trialnamep,
+    null as trialnameothp 
+from admire_v5.othtxprogp;

@@ -1,5 +1,5 @@
 select patno,
-    seccdiagdatef12,
+    to_date('15/'||seccdiagdatef12n, 'DD/MM/YYYY') as seccdiagdatef12,
     secctypef12,
-    othtypef12 
-from admire_v4.seccan24m;
+    null as othtypef12 
+from admire_v5.seccan24m;

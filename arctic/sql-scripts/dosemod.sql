@@ -7,7 +7,7 @@ select patno,
     chemostopearly,
     chemoaltroute,
     chemoroute,
-    chemorouteoth,
+    null as chemorouteoth,
     chemomodreas,
-    chemomodreasoth 
-from arctic_v4.dosemod;
+    null as chemomodreasoth 
+from arctic_v5.dosemod;

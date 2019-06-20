@@ -1,13 +1,13 @@
 select patno,
     othtxnameafu,
-    othtxnameothafu,
-    othtxsdateafu,
+    null as othtxnameothafu,
+    to_date('15/'||othtxsdateafun, 'DD/MM/YYYY') as othtxsdateafu,
     othtxstopafu,
-    othtxedateafu,
+    to_date('15/'||othtxedateafun, 'DD/MM/YYYY') as othtxedateafu,
     othtxrespafu,
     othtxreasafu,
-    othtxreasothafu,
-    trialafu,
+    null as othtxreasothafu,
+    null as trialafu,
     trialnameafu,
-    trialnameothafu 
-from admire_v4.othtxafu;
+    null as trialnameothafu 
+from admire_v5.othtxafu;

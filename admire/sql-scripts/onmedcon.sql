@@ -1,10 +1,10 @@
 select patno,
     medcondname,
-    medcondnameoth,
-    medcondsdate,
+    null as medcondnameoth,
+    to_date('15/'||medcondsdatenew, 'DD/MM/YYYY') as medcondsdate,
     medcondtrt,
-    medcondtrtoth,
-    mctrtsdate,
-    mctrtstop,
-    mctrtedate 
-from admire_v4.onmedcon;
+    null as medcondtrtoth,
+    to_date('15/'||mctrtsdatenew, 'DD/MM/YYYY') as mctrtsdate,
+    null as mctrtstop,
+    to_date('15/'||mctrtedatenew, 'DD/MM/YYYY') as mctrtedate 
+from admire_v5.onmedcon;

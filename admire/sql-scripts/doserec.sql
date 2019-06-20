@@ -1,4 +1,4 @@
 select patno,
     chemorecname,
     chemodoserec 
-from admire_v4.doserec;
+from admire_v5.doserec;

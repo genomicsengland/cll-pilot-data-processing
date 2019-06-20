@@ -17,7 +17,7 @@ indx.con <- dbConnect(drv,
              password = p$password)
 
 #-- get trialno table, consent manifest, and sequencing manifest
-trialno <- dbGetQuery(indx.con, "select * from admire_v4.trialno;")
+trialno <- dbGetQuery(indx.con, "select * from admire_v5.trialno;")
 consent_manifest <- dbGetQuery(indx.con, "select * from cll_common.consent_manifest where trial in ('Admire');")
 
 #-- get list of sql files which make research tables and read them into memory
@@ -58,11 +58,13 @@ if(any(sapply(d[!names(d) %in% "genomes"], function(x) any(is.na(x$patno))))){
 	stop("missing values in patno")
 }
 
+# ALTERATION FOR THIS APPENDING RELEASE TO JUST TAKE ROWS FROM GENOMES TABLE WITH RELEVANT PATNO
 #-- go through and remove non-valid patnos from non-genomes tables
-d_exp <- lapply(d[!names(d) %in% "genomes"], function(x) x[x$patno %in% cohort_patno,])
+#-- d_exp <- lapply(d[!names(d) %in% "genomes"], function(x) x[x$patno %in% cohort_patno,])
+d_exp <- lapply(d, function(x) x[x$patno %in% cohort_patno,])
 
 #-- remove rows from genomes by patientid (dont' have to clinical data to be in this table)
-d_exp[["genomes"]] <- d[["genomes"]] %>% filter(patientid %in% cohort_patientid & !is.na(patientid))
+#-- d_exp[["genomes"]] <- d[["genomes"]] %>% filter(patientid %in% cohort_patientid & !is.na(patientid))
 
 #-- function to write out files
 writefile <- function(df, filename, separator = "\t"){

@@ -1,9 +1,9 @@
 select patno,
-    deaddate,
+    to_date('15/'||deaddaten, 'DD/MM/YYYY') as deaddate,
     deadcaus,
-    /*deadcausoth,*/
+    null as deadcausoth,
     deadcausdetail,
     deaddisstat,
     othtxdeath,
     seccand 
-from admire_v4.death;
+from admire_v5.death;

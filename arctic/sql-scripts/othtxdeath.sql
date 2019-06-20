@@ -1,13 +1,13 @@
 select patno,
-    othtxnamed,
+    null as othtxnamed,
     othtxnameothd,
-    othtxsdated,
+    to_date('15/'||othtxsdatedn, 'DD/MM/YYYY') as othtxsdated,
     othtxstopd,
-    othtxedated,
+    to_date('15/'||othtxedatedn, 'DD/MM/YYYY') as othtxedated,
     othtxrespd,
     othtxreasd,
-    othtxreasothd,
+    null as othtxreasothd,
     triald,
-    trialnamed,
-    trialnameothd 
-from arctic_v4.othtxdeath;
+    null as trialnamed,
+    null as trialnameothd 
+from arctic_v5.othtxdeath;

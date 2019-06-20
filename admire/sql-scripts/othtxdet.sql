@@ -1,10 +1,10 @@
 select patno,
     othtxname,
-    othtxnameoth,
+    null as othtxnameoth,
     othtxprevrep,
-    othtxsdate,
+    to_date('15/'||othtxsdaten, 'DD/MM/YYYY') as othtxsdate,
     othtxstop,
-    othtxedate,
+    to_date('15/'||othtxedaten, 'DD/MM/YYYY') as othtxedate,
     othtxreas,
-    othtxreasoth 
-from admire_v4.othtxdet;
+    null as othtxreasoth 
+from admire_v5.othtxdet;

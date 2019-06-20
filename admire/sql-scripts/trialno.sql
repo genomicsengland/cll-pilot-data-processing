@@ -1,3 +1,4 @@
 select trialno,
-    patno 
-from admire_v4.trialno;
+    patno,
+    true as v5_addition
+from admire_v5.trialno;
